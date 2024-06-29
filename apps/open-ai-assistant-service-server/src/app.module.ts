@@ -1,9 +1,11 @@
+import { RedisModule } from "./redis/redis.module";
 import { Module } from "@nestjs/common";
 import { ConversationModule } from "./conversation/conversation.module";
 import { MessageModule } from "./message/message.module";
 import { ReplyModule } from "./reply/reply.module";
 import { UserModule } from "./user/user.module";
 import { OpenAiModule } from "./OpenAi/openai.module";
+import { TopicModule } from "./Topic/topic.module";
 import { HealthModule } from "./health/health.module";
 import { PrismaModule } from "./prisma/prisma.module";
 import { SecretsManagerModule } from "./providers/secrets/secretsManager.module";
@@ -21,6 +23,7 @@ import { ApolloDriver, ApolloDriverConfig } from "@nestjs/apollo";
     ReplyModule,
     UserModule,
     OpenAiModule,
+    TopicModule,
     HealthModule,
     PrismaModule,
     SecretsManagerModule,
@@ -43,6 +46,7 @@ import { ApolloDriver, ApolloDriverConfig } from "@nestjs/apollo";
       inject: [ConfigService],
       imports: [ConfigModule],
     }),
+    RedisModule,
   ],
   providers: [],
 })
