@@ -3,6 +3,7 @@ import { ConversationModule } from "./conversation/conversation.module";
 import { MessageModule } from "./message/message.module";
 import { ReplyModule } from "./reply/reply.module";
 import { UserModule } from "./user/user.module";
+import { OpenAiModule } from "./OpenAi/openai.module";
 import { HealthModule } from "./health/health.module";
 import { PrismaModule } from "./prisma/prisma.module";
 import { SecretsManagerModule } from "./providers/secrets/secretsManager.module";
@@ -19,6 +20,7 @@ import { ApolloDriver, ApolloDriverConfig } from "@nestjs/apollo";
     MessageModule,
     ReplyModule,
     UserModule,
+    OpenAiModule,
     HealthModule,
     PrismaModule,
     SecretsManagerModule,
