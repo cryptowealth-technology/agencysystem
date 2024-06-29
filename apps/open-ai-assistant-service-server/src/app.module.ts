@@ -4,6 +4,9 @@ import { ConversationModule } from "./conversation/conversation.module";
 import { MessageModule } from "./message/message.module";
 import { ReplyModule } from "./reply/reply.module";
 import { UserModule } from "./user/user.module";
+import { PromptCategoryModule } from "./promptCategory/promptCategory.module";
+import { PromptHistoryModule } from "./promptHistory/promptHistory.module";
+import { PromptModule } from "./prompt/prompt.module";
 import { OpenAiModule } from "./OpenAi/openai.module";
 import { TopicModule } from "./Topic/topic.module";
 import { HealthModule } from "./health/health.module";
@@ -22,6 +25,9 @@ import { ApolloDriver, ApolloDriverConfig } from "@nestjs/apollo";
     MessageModule,
     ReplyModule,
     UserModule,
+    PromptCategoryModule,
+    PromptHistoryModule,
+    PromptModule,
     OpenAiModule,
     TopicModule,
     HealthModule,
