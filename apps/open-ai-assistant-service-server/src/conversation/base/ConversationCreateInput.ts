@@ -9,5 +9,67 @@ https://docs.amplication.com/how-to/custom-code
 
 ------------------------------------------------------------------------------
   */
-class ConversationCreateInput {}
+import { InputType, Field } from "@nestjs/graphql";
+import { ApiProperty } from "@nestjs/swagger";
+import {
+  IsString,
+  MaxLength,
+  IsOptional,
+  ValidateNested,
+} from "class-validator";
+import { MessageWhereUniqueInput } from "../../message/base/MessageWhereUniqueInput";
+import { Type } from "class-transformer";
+import { MessageCreateNestedManyWithoutConversationsInput } from "./MessageCreateNestedManyWithoutConversationsInput";
+
+@InputType()
+class ConversationCreateInput {
+  @ApiProperty({
+    required: false,
+    type: String,
+  })
+  @IsString()
+  @MaxLength(1000)
+  @IsOptional()
+  @Field(() => String, {
+    nullable: true,
+  })
+  content?: string | null;
+
+  @ApiProperty({
+    required: false,
+    type: () => MessageWhereUniqueInput,
+  })
+  @ValidateNested()
+  @Type(() => MessageWhereUniqueInput)
+  @IsOptional()
+  @Field(() => MessageWhereUniqueInput, {
+    nullable: true,
+  })
+  message?: MessageWhereUniqueInput | null;
+
+  @ApiProperty({
+    required: false,
+    type: () => MessageCreateNestedManyWithoutConversationsInput,
+  })
+  @ValidateNested()
+  @Type(() => MessageCreateNestedManyWithoutConversationsInput)
+  @IsOptional()
+  @Field(() => MessageCreateNestedManyWithoutConversationsInput, {
+    nullable: true,
+  })
+  messages?: MessageCreateNestedManyWithoutConversationsInput;
+
+  @ApiProperty({
+    required: false,
+    type: String,
+  })
+  @IsString()
+  @MaxLength(1000)
+  @IsOptional()
+  @Field(() => String, {
+    nullable: true,
+  })
+  responder?: string | null;
+}
+
 export { ConversationCreateInput as ConversationCreateInput };

@@ -7,16 +7,26 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model Message {
-  createdAt DateTime @default(now())
-  id        String   @id @default(cuid())
-  updatedAt DateTime @updatedAt
+model Conversation {
+  content   String?
+  createdAt DateTime  @default(now())
+  id        String    @id @default(cuid())
+  message   Message?  @relation(name: "ConversationsOnMessage", fields: [messageId], references: [id])
+  messageId String?
+  messages  Message[] @relation(name: "ConversationOnMessages")
+  responder String?
+  updatedAt DateTime  @updatedAt
 }
 
-model Conversation {
-  createdAt DateTime @default(now())
-  id        String   @id @default(cuid())
-  updatedAt DateTime @updatedAt
+model Message {
+  content        String?
+  conversation   Conversation?  @relation(name: "ConversationOnMessages", fields: [conversationId], references: [id])
+  conversationId String?
+  conversations  Conversation[] @relation(name: "ConversationsOnMessage")
+  createdAt      DateTime       @default(now())
+  id             String         @id @default(cuid())
+  sender         String?
+  updatedAt      DateTime       @updatedAt
 }
 
 model Reply {
@@ -30,9 +40,11 @@ model User {
   email     String?  @unique
   firstName String?
   id        String   @id @default(cuid())
+  initiator String?
   lastName  String?
   password  String
   roles     Json
+  title     String?
   updatedAt DateTime @updatedAt
   username  String   @unique
 }

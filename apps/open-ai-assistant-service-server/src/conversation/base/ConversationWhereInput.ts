@@ -11,12 +11,26 @@ https://docs.amplication.com/how-to/custom-code
   */
 import { InputType, Field } from "@nestjs/graphql";
 import { ApiProperty } from "@nestjs/swagger";
-import { StringFilter } from "../../util/StringFilter";
+import { StringNullableFilter } from "../../util/StringNullableFilter";
 import { Type } from "class-transformer";
-import { IsOptional } from "class-validator";
+import { IsOptional, ValidateNested } from "class-validator";
+import { StringFilter } from "../../util/StringFilter";
+import { MessageWhereUniqueInput } from "../../message/base/MessageWhereUniqueInput";
+import { MessageListRelationFilter } from "../../message/base/MessageListRelationFilter";
 
 @InputType()
 class ConversationWhereInput {
+  @ApiProperty({
+    required: false,
+    type: StringNullableFilter,
+  })
+  @Type(() => StringNullableFilter)
+  @IsOptional()
+  @Field(() => StringNullableFilter, {
+    nullable: true,
+  })
+  content?: StringNullableFilter;
+
   @ApiProperty({
     required: false,
     type: StringFilter,
@@ -27,6 +41,41 @@ class ConversationWhereInput {
     nullable: true,
   })
   id?: StringFilter;
+
+  @ApiProperty({
+    required: false,
+    type: () => MessageWhereUniqueInput,
+  })
+  @ValidateNested()
+  @Type(() => MessageWhereUniqueInput)
+  @IsOptional()
+  @Field(() => MessageWhereUniqueInput, {
+    nullable: true,
+  })
+  message?: MessageWhereUniqueInput;
+
+  @ApiProperty({
+    required: false,
+    type: () => MessageListRelationFilter,
+  })
+  @ValidateNested()
+  @Type(() => MessageListRelationFilter)
+  @IsOptional()
+  @Field(() => MessageListRelationFilter, {
+    nullable: true,
+  })
+  messages?: MessageListRelationFilter;
+
+  @ApiProperty({
+    required: false,
+    type: StringNullableFilter,
+  })
+  @Type(() => StringNullableFilter)
+  @IsOptional()
+  @Field(() => StringNullableFilter, {
+    nullable: true,
+  })
+  responder?: StringNullableFilter;
 }
 
 export { ConversationWhereInput as ConversationWhereInput };

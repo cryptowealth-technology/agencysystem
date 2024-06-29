@@ -11,12 +11,50 @@ https://docs.amplication.com/how-to/custom-code
   */
 import { InputType, Field } from "@nestjs/graphql";
 import { ApiProperty } from "@nestjs/swagger";
-import { StringFilter } from "../../util/StringFilter";
+import { StringNullableFilter } from "../../util/StringNullableFilter";
 import { Type } from "class-transformer";
-import { IsOptional } from "class-validator";
+import { IsOptional, ValidateNested } from "class-validator";
+import { ConversationWhereUniqueInput } from "../../conversation/base/ConversationWhereUniqueInput";
+import { ConversationListRelationFilter } from "../../conversation/base/ConversationListRelationFilter";
+import { StringFilter } from "../../util/StringFilter";
 
 @InputType()
 class MessageWhereInput {
+  @ApiProperty({
+    required: false,
+    type: StringNullableFilter,
+  })
+  @Type(() => StringNullableFilter)
+  @IsOptional()
+  @Field(() => StringNullableFilter, {
+    nullable: true,
+  })
+  content?: StringNullableFilter;
+
+  @ApiProperty({
+    required: false,
+    type: () => ConversationWhereUniqueInput,
+  })
+  @ValidateNested()
+  @Type(() => ConversationWhereUniqueInput)
+  @IsOptional()
+  @Field(() => ConversationWhereUniqueInput, {
+    nullable: true,
+  })
+  conversation?: ConversationWhereUniqueInput;
+
+  @ApiProperty({
+    required: false,
+    type: () => ConversationListRelationFilter,
+  })
+  @ValidateNested()
+  @Type(() => ConversationListRelationFilter)
+  @IsOptional()
+  @Field(() => ConversationListRelationFilter, {
+    nullable: true,
+  })
+  conversations?: ConversationListRelationFilter;
+
   @ApiProperty({
     required: false,
     type: StringFilter,
@@ -27,6 +65,17 @@ class MessageWhereInput {
     nullable: true,
   })
   id?: StringFilter;
+
+  @ApiProperty({
+    required: false,
+    type: StringNullableFilter,
+  })
+  @Type(() => StringNullableFilter)
+  @IsOptional()
+  @Field(() => StringNullableFilter, {
+    nullable: true,
+  })
+  sender?: StringNullableFilter;
 }
 
 export { MessageWhereInput as MessageWhereInput };
