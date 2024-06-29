@@ -13,6 +13,12 @@ import * as graphql from "@nestjs/graphql";
 import { GraphQLError } from "graphql";
 import { isRecordNotFoundError } from "../../prisma.util";
 import { MetaQueryPayload } from "../../util/MetaQueryPayload";
+import * as nestAccessControl from "nest-access-control";
+import * as gqlACGuard from "../../auth/gqlAC.guard";
+import { GqlDefaultAuthGuard } from "../../auth/gqlDefaultAuth.guard";
+import * as common from "@nestjs/common";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
 import { Conversation } from "./Conversation";
 import { ConversationCountArgs } from "./ConversationCountArgs";
 import { ConversationFindManyArgs } from "./ConversationFindManyArgs";
@@ -23,10 +29,20 @@ import { DeleteConversationArgs } from "./DeleteConversationArgs";
 import { MessageFindManyArgs } from "../../message/base/MessageFindManyArgs";
 import { Message } from "../../message/base/Message";
 import { ConversationService } from "../conversation.service";
+@common.UseGuards(GqlDefaultAuthGuard, gqlACGuard.GqlACGuard)
 @graphql.Resolver(() => Conversation)
 export class ConversationResolverBase {
-  constructor(protected readonly service: ConversationService) {}
+  constructor(
+    protected readonly service: ConversationService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
 
+  @graphql.Query(() => MetaQueryPayload)
+  @nestAccessControl.UseRoles({
+    resource: "Conversation",
+    action: "read",
+    possession: "any",
+  })
   async _conversationsMeta(
     @graphql.Args() args: ConversationCountArgs
   ): Promise<MetaQueryPayload> {
@@ -36,14 +52,26 @@ export class ConversationResolverBase {
     };
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => [Conversation])
+  @nestAccessControl.UseRoles({
+    resource: "Conversation",
+    action: "read",
+    possession: "any",
+  })
   async conversations(
     @graphql.Args() args: ConversationFindManyArgs
   ): Promise<Conversation[]> {
     return this.service.conversations(args);
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => Conversation, { nullable: true })
+  @nestAccessControl.UseRoles({
+    resource: "Conversation",
+    action: "read",
+    possession: "own",
+  })
   async conversation(
     @graphql.Args() args: ConversationFindUniqueArgs
   ): Promise<Conversation | null> {
@@ -54,7 +82,13 @@ export class ConversationResolverBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @graphql.Mutation(() => Conversation)
+  @nestAccessControl.UseRoles({
+    resource: "Conversation",
+    action: "create",
+    possession: "any",
+  })
   async createConversation(
     @graphql.Args() args: CreateConversationArgs
   ): Promise<Conversation> {
@@ -72,7 +106,13 @@ export class ConversationResolverBase {
     });
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @graphql.Mutation(() => Conversation)
+  @nestAccessControl.UseRoles({
+    resource: "Conversation",
+    action: "update",
+    possession: "any",
+  })
   async updateConversation(
     @graphql.Args() args: UpdateConversationArgs
   ): Promise<Conversation | null> {
@@ -100,6 +140,11 @@ export class ConversationResolverBase {
   }
 
   @graphql.Mutation(() => Conversation)
+  @nestAccessControl.UseRoles({
+    resource: "Conversation",
+    action: "delete",
+    possession: "any",
+  })
   async deleteConversation(
     @graphql.Args() args: DeleteConversationArgs
   ): Promise<Conversation | null> {
@@ -115,7 +160,13 @@ export class ConversationResolverBase {
     }
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.ResolveField(() => [Message], { name: "messages" })
+  @nestAccessControl.UseRoles({
+    resource: "Message",
+    action: "read",
+    possession: "any",
+  })
   async findMessages(
     @graphql.Parent() parent: Conversation,
     @graphql.Args() args: MessageFindManyArgs
@@ -129,9 +180,15 @@ export class ConversationResolverBase {
     return results;
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.ResolveField(() => Message, {
     nullable: true,
     name: "message",
+  })
+  @nestAccessControl.UseRoles({
+    resource: "Message",
+    action: "read",
+    possession: "any",
   })
   async getMessage(
     @graphql.Parent() parent: Conversation

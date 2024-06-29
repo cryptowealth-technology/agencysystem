@@ -16,17 +16,38 @@ import * as errors from "../../errors";
 import { Request } from "express";
 import { plainToClass } from "class-transformer";
 import { ApiNestedQuery } from "../../decorators/api-nested-query.decorator";
+import * as nestAccessControl from "nest-access-control";
+import * as defaultAuthGuard from "../../auth/defaultAuth.guard";
 import { PromptHistoryService } from "../promptHistory.service";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
 import { PromptHistoryCreateInput } from "./PromptHistoryCreateInput";
 import { PromptHistory } from "./PromptHistory";
 import { PromptHistoryFindManyArgs } from "./PromptHistoryFindManyArgs";
 import { PromptHistoryWhereUniqueInput } from "./PromptHistoryWhereUniqueInput";
 import { PromptHistoryUpdateInput } from "./PromptHistoryUpdateInput";
 
+@swagger.ApiBearerAuth()
+@common.UseGuards(defaultAuthGuard.DefaultAuthGuard, nestAccessControl.ACGuard)
 export class PromptHistoryControllerBase {
-  constructor(protected readonly service: PromptHistoryService) {}
+  constructor(
+    protected readonly service: PromptHistoryService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Post()
   @swagger.ApiCreatedResponse({ type: PromptHistory })
+  @nestAccessControl.UseRoles({
+    resource: "PromptHistory",
+    action: "create",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
+  @swagger.ApiBody({
+    type: PromptHistoryCreateInput,
+  })
   async createPromptHistory(
     @common.Body() data: PromptHistoryCreateInput
   ): Promise<PromptHistory> {
@@ -57,9 +78,18 @@ export class PromptHistoryControllerBase {
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get()
   @swagger.ApiOkResponse({ type: [PromptHistory] })
   @ApiNestedQuery(PromptHistoryFindManyArgs)
+  @nestAccessControl.UseRoles({
+    resource: "PromptHistory",
+    action: "read",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async promptHistories(
     @common.Req() request: Request
   ): Promise<PromptHistory[]> {
@@ -83,9 +113,18 @@ export class PromptHistoryControllerBase {
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get("/:id")
   @swagger.ApiOkResponse({ type: PromptHistory })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "PromptHistory",
+    action: "read",
+    possession: "own",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async promptHistory(
     @common.Param() params: PromptHistoryWhereUniqueInput
   ): Promise<PromptHistory | null> {
@@ -114,9 +153,21 @@ export class PromptHistoryControllerBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Patch("/:id")
   @swagger.ApiOkResponse({ type: PromptHistory })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "PromptHistory",
+    action: "update",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
+  @swagger.ApiBody({
+    type: PromptHistoryUpdateInput,
+  })
   async updatePromptHistory(
     @common.Param() params: PromptHistoryWhereUniqueInput,
     @common.Body() data: PromptHistoryUpdateInput
@@ -161,6 +212,14 @@ export class PromptHistoryControllerBase {
   @common.Delete("/:id")
   @swagger.ApiOkResponse({ type: PromptHistory })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "PromptHistory",
+    action: "delete",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async deletePromptHistory(
     @common.Param() params: PromptHistoryWhereUniqueInput
   ): Promise<PromptHistory | null> {

@@ -13,6 +13,12 @@ import * as graphql from "@nestjs/graphql";
 import { GraphQLError } from "graphql";
 import { isRecordNotFoundError } from "../../prisma.util";
 import { MetaQueryPayload } from "../../util/MetaQueryPayload";
+import * as nestAccessControl from "nest-access-control";
+import * as gqlACGuard from "../../auth/gqlAC.guard";
+import { GqlDefaultAuthGuard } from "../../auth/gqlDefaultAuth.guard";
+import * as common from "@nestjs/common";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
 import { PromptCategory } from "./PromptCategory";
 import { PromptCategoryCountArgs } from "./PromptCategoryCountArgs";
 import { PromptCategoryFindManyArgs } from "./PromptCategoryFindManyArgs";
@@ -21,10 +27,20 @@ import { CreatePromptCategoryArgs } from "./CreatePromptCategoryArgs";
 import { UpdatePromptCategoryArgs } from "./UpdatePromptCategoryArgs";
 import { DeletePromptCategoryArgs } from "./DeletePromptCategoryArgs";
 import { PromptCategoryService } from "../promptCategory.service";
+@common.UseGuards(GqlDefaultAuthGuard, gqlACGuard.GqlACGuard)
 @graphql.Resolver(() => PromptCategory)
 export class PromptCategoryResolverBase {
-  constructor(protected readonly service: PromptCategoryService) {}
+  constructor(
+    protected readonly service: PromptCategoryService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
 
+  @graphql.Query(() => MetaQueryPayload)
+  @nestAccessControl.UseRoles({
+    resource: "PromptCategory",
+    action: "read",
+    possession: "any",
+  })
   async _promptCategoriesMeta(
     @graphql.Args() args: PromptCategoryCountArgs
   ): Promise<MetaQueryPayload> {
@@ -34,14 +50,26 @@ export class PromptCategoryResolverBase {
     };
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => [PromptCategory])
+  @nestAccessControl.UseRoles({
+    resource: "PromptCategory",
+    action: "read",
+    possession: "any",
+  })
   async promptCategories(
     @graphql.Args() args: PromptCategoryFindManyArgs
   ): Promise<PromptCategory[]> {
     return this.service.promptCategories(args);
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => PromptCategory, { nullable: true })
+  @nestAccessControl.UseRoles({
+    resource: "PromptCategory",
+    action: "read",
+    possession: "own",
+  })
   async promptCategory(
     @graphql.Args() args: PromptCategoryFindUniqueArgs
   ): Promise<PromptCategory | null> {
@@ -52,7 +80,13 @@ export class PromptCategoryResolverBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @graphql.Mutation(() => PromptCategory)
+  @nestAccessControl.UseRoles({
+    resource: "PromptCategory",
+    action: "create",
+    possession: "any",
+  })
   async createPromptCategory(
     @graphql.Args() args: CreatePromptCategoryArgs
   ): Promise<PromptCategory> {
@@ -62,7 +96,13 @@ export class PromptCategoryResolverBase {
     });
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @graphql.Mutation(() => PromptCategory)
+  @nestAccessControl.UseRoles({
+    resource: "PromptCategory",
+    action: "update",
+    possession: "any",
+  })
   async updatePromptCategory(
     @graphql.Args() args: UpdatePromptCategoryArgs
   ): Promise<PromptCategory | null> {
@@ -82,6 +122,11 @@ export class PromptCategoryResolverBase {
   }
 
   @graphql.Mutation(() => PromptCategory)
+  @nestAccessControl.UseRoles({
+    resource: "PromptCategory",
+    action: "delete",
+    possession: "any",
+  })
   async deletePromptCategory(
     @graphql.Args() args: DeletePromptCategoryArgs
   ): Promise<PromptCategory | null> {

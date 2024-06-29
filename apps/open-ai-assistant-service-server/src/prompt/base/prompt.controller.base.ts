@@ -16,7 +16,11 @@ import * as errors from "../../errors";
 import { Request } from "express";
 import { plainToClass } from "class-transformer";
 import { ApiNestedQuery } from "../../decorators/api-nested-query.decorator";
+import * as nestAccessControl from "nest-access-control";
+import * as defaultAuthGuard from "../../auth/defaultAuth.guard";
 import { PromptService } from "../prompt.service";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
 import { PromptCreateInput } from "./PromptCreateInput";
 import { Prompt } from "./Prompt";
 import { PromptFindManyArgs } from "./PromptFindManyArgs";
@@ -26,10 +30,27 @@ import { PromptHistoryFindManyArgs } from "../../promptHistory/base/PromptHistor
 import { PromptHistory } from "../../promptHistory/base/PromptHistory";
 import { PromptHistoryWhereUniqueInput } from "../../promptHistory/base/PromptHistoryWhereUniqueInput";
 
+@swagger.ApiBearerAuth()
+@common.UseGuards(defaultAuthGuard.DefaultAuthGuard, nestAccessControl.ACGuard)
 export class PromptControllerBase {
-  constructor(protected readonly service: PromptService) {}
+  constructor(
+    protected readonly service: PromptService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Post()
   @swagger.ApiCreatedResponse({ type: Prompt })
+  @nestAccessControl.UseRoles({
+    resource: "Prompt",
+    action: "create",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
+  @swagger.ApiBody({
+    type: PromptCreateInput,
+  })
   async createPrompt(@common.Body() data: PromptCreateInput): Promise<Prompt> {
     return await this.service.createPrompt({
       data: data,
@@ -44,9 +65,18 @@ export class PromptControllerBase {
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get()
   @swagger.ApiOkResponse({ type: [Prompt] })
   @ApiNestedQuery(PromptFindManyArgs)
+  @nestAccessControl.UseRoles({
+    resource: "Prompt",
+    action: "read",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async prompts(@common.Req() request: Request): Promise<Prompt[]> {
     const args = plainToClass(PromptFindManyArgs, request.query);
     return this.service.prompts({
@@ -62,9 +92,18 @@ export class PromptControllerBase {
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get("/:id")
   @swagger.ApiOkResponse({ type: Prompt })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Prompt",
+    action: "read",
+    possession: "own",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async prompt(
     @common.Param() params: PromptWhereUniqueInput
   ): Promise<Prompt | null> {
@@ -87,9 +126,21 @@ export class PromptControllerBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Patch("/:id")
   @swagger.ApiOkResponse({ type: Prompt })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Prompt",
+    action: "update",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
+  @swagger.ApiBody({
+    type: PromptUpdateInput,
+  })
   async updatePrompt(
     @common.Param() params: PromptWhereUniqueInput,
     @common.Body() data: PromptUpdateInput
@@ -120,6 +171,14 @@ export class PromptControllerBase {
   @common.Delete("/:id")
   @swagger.ApiOkResponse({ type: Prompt })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Prompt",
+    action: "delete",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async deletePrompt(
     @common.Param() params: PromptWhereUniqueInput
   ): Promise<Prompt | null> {
@@ -145,8 +204,14 @@ export class PromptControllerBase {
     }
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get("/:id/promptHistories")
   @ApiNestedQuery(PromptHistoryFindManyArgs)
+  @nestAccessControl.UseRoles({
+    resource: "PromptHistory",
+    action: "read",
+    possession: "any",
+  })
   async findPromptHistories(
     @common.Req() request: Request,
     @common.Param() params: PromptWhereUniqueInput
@@ -178,6 +243,11 @@ export class PromptControllerBase {
   }
 
   @common.Post("/:id/promptHistories")
+  @nestAccessControl.UseRoles({
+    resource: "Prompt",
+    action: "update",
+    possession: "any",
+  })
   async connectPromptHistories(
     @common.Param() params: PromptWhereUniqueInput,
     @common.Body() body: PromptHistoryWhereUniqueInput[]
@@ -195,6 +265,11 @@ export class PromptControllerBase {
   }
 
   @common.Patch("/:id/promptHistories")
+  @nestAccessControl.UseRoles({
+    resource: "Prompt",
+    action: "update",
+    possession: "any",
+  })
   async updatePromptHistories(
     @common.Param() params: PromptWhereUniqueInput,
     @common.Body() body: PromptHistoryWhereUniqueInput[]
@@ -212,6 +287,11 @@ export class PromptControllerBase {
   }
 
   @common.Delete("/:id/promptHistories")
+  @nestAccessControl.UseRoles({
+    resource: "Prompt",
+    action: "update",
+    possession: "any",
+  })
   async disconnectPromptHistories(
     @common.Param() params: PromptWhereUniqueInput,
     @common.Body() body: PromptHistoryWhereUniqueInput[]

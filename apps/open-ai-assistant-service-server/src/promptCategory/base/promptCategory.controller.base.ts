@@ -16,17 +16,38 @@ import * as errors from "../../errors";
 import { Request } from "express";
 import { plainToClass } from "class-transformer";
 import { ApiNestedQuery } from "../../decorators/api-nested-query.decorator";
+import * as nestAccessControl from "nest-access-control";
+import * as defaultAuthGuard from "../../auth/defaultAuth.guard";
 import { PromptCategoryService } from "../promptCategory.service";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
 import { PromptCategoryCreateInput } from "./PromptCategoryCreateInput";
 import { PromptCategory } from "./PromptCategory";
 import { PromptCategoryFindManyArgs } from "./PromptCategoryFindManyArgs";
 import { PromptCategoryWhereUniqueInput } from "./PromptCategoryWhereUniqueInput";
 import { PromptCategoryUpdateInput } from "./PromptCategoryUpdateInput";
 
+@swagger.ApiBearerAuth()
+@common.UseGuards(defaultAuthGuard.DefaultAuthGuard, nestAccessControl.ACGuard)
 export class PromptCategoryControllerBase {
-  constructor(protected readonly service: PromptCategoryService) {}
+  constructor(
+    protected readonly service: PromptCategoryService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Post()
   @swagger.ApiCreatedResponse({ type: PromptCategory })
+  @nestAccessControl.UseRoles({
+    resource: "PromptCategory",
+    action: "create",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
+  @swagger.ApiBody({
+    type: PromptCategoryCreateInput,
+  })
   async createPromptCategory(
     @common.Body() data: PromptCategoryCreateInput
   ): Promise<PromptCategory> {
@@ -42,9 +63,18 @@ export class PromptCategoryControllerBase {
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get()
   @swagger.ApiOkResponse({ type: [PromptCategory] })
   @ApiNestedQuery(PromptCategoryFindManyArgs)
+  @nestAccessControl.UseRoles({
+    resource: "PromptCategory",
+    action: "read",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async promptCategories(
     @common.Req() request: Request
   ): Promise<PromptCategory[]> {
@@ -61,9 +91,18 @@ export class PromptCategoryControllerBase {
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get("/:id")
   @swagger.ApiOkResponse({ type: PromptCategory })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "PromptCategory",
+    action: "read",
+    possession: "own",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async promptCategory(
     @common.Param() params: PromptCategoryWhereUniqueInput
   ): Promise<PromptCategory | null> {
@@ -85,9 +124,21 @@ export class PromptCategoryControllerBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Patch("/:id")
   @swagger.ApiOkResponse({ type: PromptCategory })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "PromptCategory",
+    action: "update",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
+  @swagger.ApiBody({
+    type: PromptCategoryUpdateInput,
+  })
   async updatePromptCategory(
     @common.Param() params: PromptCategoryWhereUniqueInput,
     @common.Body() data: PromptCategoryUpdateInput
@@ -117,6 +168,14 @@ export class PromptCategoryControllerBase {
   @common.Delete("/:id")
   @swagger.ApiOkResponse({ type: PromptCategory })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "PromptCategory",
+    action: "delete",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async deletePromptCategory(
     @common.Param() params: PromptCategoryWhereUniqueInput
   ): Promise<PromptCategory | null> {

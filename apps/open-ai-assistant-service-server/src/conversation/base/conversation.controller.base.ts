@@ -16,7 +16,11 @@ import * as errors from "../../errors";
 import { Request } from "express";
 import { plainToClass } from "class-transformer";
 import { ApiNestedQuery } from "../../decorators/api-nested-query.decorator";
+import * as nestAccessControl from "nest-access-control";
+import * as defaultAuthGuard from "../../auth/defaultAuth.guard";
 import { ConversationService } from "../conversation.service";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
 import { ConversationCreateInput } from "./ConversationCreateInput";
 import { Conversation } from "./Conversation";
 import { ConversationFindManyArgs } from "./ConversationFindManyArgs";
@@ -26,10 +30,27 @@ import { MessageFindManyArgs } from "../../message/base/MessageFindManyArgs";
 import { Message } from "../../message/base/Message";
 import { MessageWhereUniqueInput } from "../../message/base/MessageWhereUniqueInput";
 
+@swagger.ApiBearerAuth()
+@common.UseGuards(defaultAuthGuard.DefaultAuthGuard, nestAccessControl.ACGuard)
 export class ConversationControllerBase {
-  constructor(protected readonly service: ConversationService) {}
+  constructor(
+    protected readonly service: ConversationService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Post()
   @swagger.ApiCreatedResponse({ type: Conversation })
+  @nestAccessControl.UseRoles({
+    resource: "Conversation",
+    action: "create",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
+  @swagger.ApiBody({
+    type: ConversationCreateInput,
+  })
   async createConversation(
     @common.Body() data: ConversationCreateInput
   ): Promise<Conversation> {
@@ -60,9 +81,18 @@ export class ConversationControllerBase {
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get()
   @swagger.ApiOkResponse({ type: [Conversation] })
   @ApiNestedQuery(ConversationFindManyArgs)
+  @nestAccessControl.UseRoles({
+    resource: "Conversation",
+    action: "read",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async conversations(@common.Req() request: Request): Promise<Conversation[]> {
     const args = plainToClass(ConversationFindManyArgs, request.query);
     return this.service.conversations({
@@ -84,9 +114,18 @@ export class ConversationControllerBase {
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get("/:id")
   @swagger.ApiOkResponse({ type: Conversation })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Conversation",
+    action: "read",
+    possession: "own",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async conversation(
     @common.Param() params: ConversationWhereUniqueInput
   ): Promise<Conversation | null> {
@@ -115,9 +154,21 @@ export class ConversationControllerBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Patch("/:id")
   @swagger.ApiOkResponse({ type: Conversation })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Conversation",
+    action: "update",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
+  @swagger.ApiBody({
+    type: ConversationUpdateInput,
+  })
   async updateConversation(
     @common.Param() params: ConversationWhereUniqueInput,
     @common.Body() data: ConversationUpdateInput
@@ -162,6 +213,14 @@ export class ConversationControllerBase {
   @common.Delete("/:id")
   @swagger.ApiOkResponse({ type: Conversation })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Conversation",
+    action: "delete",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async deleteConversation(
     @common.Param() params: ConversationWhereUniqueInput
   ): Promise<Conversation | null> {
@@ -193,8 +252,14 @@ export class ConversationControllerBase {
     }
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get("/:id/messages")
   @ApiNestedQuery(MessageFindManyArgs)
+  @nestAccessControl.UseRoles({
+    resource: "Message",
+    action: "read",
+    possession: "any",
+  })
   async findMessages(
     @common.Req() request: Request,
     @common.Param() params: ConversationWhereUniqueInput
@@ -226,6 +291,11 @@ export class ConversationControllerBase {
   }
 
   @common.Post("/:id/messages")
+  @nestAccessControl.UseRoles({
+    resource: "Conversation",
+    action: "update",
+    possession: "any",
+  })
   async connectMessages(
     @common.Param() params: ConversationWhereUniqueInput,
     @common.Body() body: MessageWhereUniqueInput[]
@@ -243,6 +313,11 @@ export class ConversationControllerBase {
   }
 
   @common.Patch("/:id/messages")
+  @nestAccessControl.UseRoles({
+    resource: "Conversation",
+    action: "update",
+    possession: "any",
+  })
   async updateMessages(
     @common.Param() params: ConversationWhereUniqueInput,
     @common.Body() body: MessageWhereUniqueInput[]
@@ -260,6 +335,11 @@ export class ConversationControllerBase {
   }
 
   @common.Delete("/:id/messages")
+  @nestAccessControl.UseRoles({
+    resource: "Conversation",
+    action: "update",
+    possession: "any",
+  })
   async disconnectMessages(
     @common.Param() params: ConversationWhereUniqueInput,
     @common.Body() body: MessageWhereUniqueInput[]

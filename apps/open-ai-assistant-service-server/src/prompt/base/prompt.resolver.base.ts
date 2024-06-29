@@ -13,6 +13,12 @@ import * as graphql from "@nestjs/graphql";
 import { GraphQLError } from "graphql";
 import { isRecordNotFoundError } from "../../prisma.util";
 import { MetaQueryPayload } from "../../util/MetaQueryPayload";
+import * as nestAccessControl from "nest-access-control";
+import * as gqlACGuard from "../../auth/gqlAC.guard";
+import { GqlDefaultAuthGuard } from "../../auth/gqlDefaultAuth.guard";
+import * as common from "@nestjs/common";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
 import { Prompt } from "./Prompt";
 import { PromptCountArgs } from "./PromptCountArgs";
 import { PromptFindManyArgs } from "./PromptFindManyArgs";
@@ -23,10 +29,20 @@ import { DeletePromptArgs } from "./DeletePromptArgs";
 import { PromptHistoryFindManyArgs } from "../../promptHistory/base/PromptHistoryFindManyArgs";
 import { PromptHistory } from "../../promptHistory/base/PromptHistory";
 import { PromptService } from "../prompt.service";
+@common.UseGuards(GqlDefaultAuthGuard, gqlACGuard.GqlACGuard)
 @graphql.Resolver(() => Prompt)
 export class PromptResolverBase {
-  constructor(protected readonly service: PromptService) {}
+  constructor(
+    protected readonly service: PromptService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
 
+  @graphql.Query(() => MetaQueryPayload)
+  @nestAccessControl.UseRoles({
+    resource: "Prompt",
+    action: "read",
+    possession: "any",
+  })
   async _promptsMeta(
     @graphql.Args() args: PromptCountArgs
   ): Promise<MetaQueryPayload> {
@@ -36,12 +52,24 @@ export class PromptResolverBase {
     };
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => [Prompt])
+  @nestAccessControl.UseRoles({
+    resource: "Prompt",
+    action: "read",
+    possession: "any",
+  })
   async prompts(@graphql.Args() args: PromptFindManyArgs): Promise<Prompt[]> {
     return this.service.prompts(args);
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => Prompt, { nullable: true })
+  @nestAccessControl.UseRoles({
+    resource: "Prompt",
+    action: "read",
+    possession: "own",
+  })
   async prompt(
     @graphql.Args() args: PromptFindUniqueArgs
   ): Promise<Prompt | null> {
@@ -52,7 +80,13 @@ export class PromptResolverBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @graphql.Mutation(() => Prompt)
+  @nestAccessControl.UseRoles({
+    resource: "Prompt",
+    action: "create",
+    possession: "any",
+  })
   async createPrompt(@graphql.Args() args: CreatePromptArgs): Promise<Prompt> {
     return await this.service.createPrompt({
       ...args,
@@ -60,7 +94,13 @@ export class PromptResolverBase {
     });
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @graphql.Mutation(() => Prompt)
+  @nestAccessControl.UseRoles({
+    resource: "Prompt",
+    action: "update",
+    possession: "any",
+  })
   async updatePrompt(
     @graphql.Args() args: UpdatePromptArgs
   ): Promise<Prompt | null> {
@@ -80,6 +120,11 @@ export class PromptResolverBase {
   }
 
   @graphql.Mutation(() => Prompt)
+  @nestAccessControl.UseRoles({
+    resource: "Prompt",
+    action: "delete",
+    possession: "any",
+  })
   async deletePrompt(
     @graphql.Args() args: DeletePromptArgs
   ): Promise<Prompt | null> {
@@ -95,7 +140,13 @@ export class PromptResolverBase {
     }
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.ResolveField(() => [PromptHistory], { name: "promptHistories" })
+  @nestAccessControl.UseRoles({
+    resource: "PromptHistory",
+    action: "read",
+    possession: "any",
+  })
   async findPromptHistories(
     @graphql.Parent() parent: Prompt,
     @graphql.Args() args: PromptHistoryFindManyArgs

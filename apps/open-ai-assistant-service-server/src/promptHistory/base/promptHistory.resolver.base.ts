@@ -13,6 +13,12 @@ import * as graphql from "@nestjs/graphql";
 import { GraphQLError } from "graphql";
 import { isRecordNotFoundError } from "../../prisma.util";
 import { MetaQueryPayload } from "../../util/MetaQueryPayload";
+import * as nestAccessControl from "nest-access-control";
+import * as gqlACGuard from "../../auth/gqlAC.guard";
+import { GqlDefaultAuthGuard } from "../../auth/gqlDefaultAuth.guard";
+import * as common from "@nestjs/common";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
 import { PromptHistory } from "./PromptHistory";
 import { PromptHistoryCountArgs } from "./PromptHistoryCountArgs";
 import { PromptHistoryFindManyArgs } from "./PromptHistoryFindManyArgs";
@@ -22,10 +28,20 @@ import { UpdatePromptHistoryArgs } from "./UpdatePromptHistoryArgs";
 import { DeletePromptHistoryArgs } from "./DeletePromptHistoryArgs";
 import { Prompt } from "../../prompt/base/Prompt";
 import { PromptHistoryService } from "../promptHistory.service";
+@common.UseGuards(GqlDefaultAuthGuard, gqlACGuard.GqlACGuard)
 @graphql.Resolver(() => PromptHistory)
 export class PromptHistoryResolverBase {
-  constructor(protected readonly service: PromptHistoryService) {}
+  constructor(
+    protected readonly service: PromptHistoryService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
 
+  @graphql.Query(() => MetaQueryPayload)
+  @nestAccessControl.UseRoles({
+    resource: "PromptHistory",
+    action: "read",
+    possession: "any",
+  })
   async _promptHistoriesMeta(
     @graphql.Args() args: PromptHistoryCountArgs
   ): Promise<MetaQueryPayload> {
@@ -35,14 +51,26 @@ export class PromptHistoryResolverBase {
     };
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => [PromptHistory])
+  @nestAccessControl.UseRoles({
+    resource: "PromptHistory",
+    action: "read",
+    possession: "any",
+  })
   async promptHistories(
     @graphql.Args() args: PromptHistoryFindManyArgs
   ): Promise<PromptHistory[]> {
     return this.service.promptHistories(args);
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.Query(() => PromptHistory, { nullable: true })
+  @nestAccessControl.UseRoles({
+    resource: "PromptHistory",
+    action: "read",
+    possession: "own",
+  })
   async promptHistory(
     @graphql.Args() args: PromptHistoryFindUniqueArgs
   ): Promise<PromptHistory | null> {
@@ -53,7 +81,13 @@ export class PromptHistoryResolverBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @graphql.Mutation(() => PromptHistory)
+  @nestAccessControl.UseRoles({
+    resource: "PromptHistory",
+    action: "create",
+    possession: "any",
+  })
   async createPromptHistory(
     @graphql.Args() args: CreatePromptHistoryArgs
   ): Promise<PromptHistory> {
@@ -71,7 +105,13 @@ export class PromptHistoryResolverBase {
     });
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @graphql.Mutation(() => PromptHistory)
+  @nestAccessControl.UseRoles({
+    resource: "PromptHistory",
+    action: "update",
+    possession: "any",
+  })
   async updatePromptHistory(
     @graphql.Args() args: UpdatePromptHistoryArgs
   ): Promise<PromptHistory | null> {
@@ -99,6 +139,11 @@ export class PromptHistoryResolverBase {
   }
 
   @graphql.Mutation(() => PromptHistory)
+  @nestAccessControl.UseRoles({
+    resource: "PromptHistory",
+    action: "delete",
+    possession: "any",
+  })
   async deletePromptHistory(
     @graphql.Args() args: DeletePromptHistoryArgs
   ): Promise<PromptHistory | null> {
@@ -114,9 +159,15 @@ export class PromptHistoryResolverBase {
     }
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @graphql.ResolveField(() => Prompt, {
     nullable: true,
     name: "prompt",
+  })
+  @nestAccessControl.UseRoles({
+    resource: "Prompt",
+    action: "read",
+    possession: "any",
   })
   async getPrompt(
     @graphql.Parent() parent: PromptHistory
