@@ -16,17 +16,38 @@ import * as errors from "../../errors";
 import { Request } from "express";
 import { plainToClass } from "class-transformer";
 import { ApiNestedQuery } from "../../decorators/api-nested-query.decorator";
+import * as nestAccessControl from "nest-access-control";
+import * as defaultAuthGuard from "../../auth/defaultAuth.guard";
 import { ReplyService } from "../reply.service";
+import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
+import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
 import { ReplyCreateInput } from "./ReplyCreateInput";
 import { Reply } from "./Reply";
 import { ReplyFindManyArgs } from "./ReplyFindManyArgs";
 import { ReplyWhereUniqueInput } from "./ReplyWhereUniqueInput";
 import { ReplyUpdateInput } from "./ReplyUpdateInput";
 
+@swagger.ApiBearerAuth()
+@common.UseGuards(defaultAuthGuard.DefaultAuthGuard, nestAccessControl.ACGuard)
 export class ReplyControllerBase {
-  constructor(protected readonly service: ReplyService) {}
+  constructor(
+    protected readonly service: ReplyService,
+    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
+  ) {}
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Post()
   @swagger.ApiCreatedResponse({ type: Reply })
+  @nestAccessControl.UseRoles({
+    resource: "Reply",
+    action: "create",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
+  @swagger.ApiBody({
+    type: ReplyCreateInput,
+  })
   async createReply(@common.Body() data: ReplyCreateInput): Promise<Reply> {
     return await this.service.createReply({
       data: data,
@@ -38,9 +59,18 @@ export class ReplyControllerBase {
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get()
   @swagger.ApiOkResponse({ type: [Reply] })
   @ApiNestedQuery(ReplyFindManyArgs)
+  @nestAccessControl.UseRoles({
+    resource: "Reply",
+    action: "read",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async replies(@common.Req() request: Request): Promise<Reply[]> {
     const args = plainToClass(ReplyFindManyArgs, request.query);
     return this.service.replies({
@@ -53,9 +83,18 @@ export class ReplyControllerBase {
     });
   }
 
+  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get("/:id")
   @swagger.ApiOkResponse({ type: Reply })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Reply",
+    action: "read",
+    possession: "own",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async reply(
     @common.Param() params: ReplyWhereUniqueInput
   ): Promise<Reply | null> {
@@ -75,9 +114,21 @@ export class ReplyControllerBase {
     return result;
   }
 
+  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Patch("/:id")
   @swagger.ApiOkResponse({ type: Reply })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Reply",
+    action: "update",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
+  @swagger.ApiBody({
+    type: ReplyUpdateInput,
+  })
   async updateReply(
     @common.Param() params: ReplyWhereUniqueInput,
     @common.Body() data: ReplyUpdateInput
@@ -105,6 +156,14 @@ export class ReplyControllerBase {
   @common.Delete("/:id")
   @swagger.ApiOkResponse({ type: Reply })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
+  @nestAccessControl.UseRoles({
+    resource: "Reply",
+    action: "delete",
+    possession: "any",
+  })
+  @swagger.ApiForbiddenResponse({
+    type: errors.ForbiddenException,
+  })
   async deleteReply(
     @common.Param() params: ReplyWhereUniqueInput
   ): Promise<Reply | null> {

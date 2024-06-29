@@ -48,3 +48,31 @@ model User {
   updatedAt DateTime @updatedAt
   username  String   @unique
 }
+
+model PromptCategory {
+  createdAt   DateTime @default(now())
+  description String?
+  id          String   @id @default(cuid())
+  name        String?
+  updatedAt   DateTime @updatedAt
+}
+
+model PromptHistory {
+  change    Json?
+  createdAt DateTime  @default(now())
+  id        String    @id @default(cuid())
+  prompt    Prompt?   @relation(fields: [promptId], references: [id])
+  promptId  String?
+  timestamp DateTime?
+  updatedAt DateTime  @updatedAt
+}
+
+model Prompt {
+  category        String?
+  content         String?
+  createdAt       DateTime        @default(now())
+  id              String          @id @default(cuid())
+  promptHistories PromptHistory[]
+  title           String?
+  updatedAt       DateTime        @updatedAt
+}

@@ -21,6 +21,18 @@ import { UserList } from "./user/UserList";
 import { UserCreate } from "./user/UserCreate";
 import { UserEdit } from "./user/UserEdit";
 import { UserShow } from "./user/UserShow";
+import { PromptCategoryList } from "./promptCategory/PromptCategoryList";
+import { PromptCategoryCreate } from "./promptCategory/PromptCategoryCreate";
+import { PromptCategoryEdit } from "./promptCategory/PromptCategoryEdit";
+import { PromptCategoryShow } from "./promptCategory/PromptCategoryShow";
+import { PromptHistoryList } from "./promptHistory/PromptHistoryList";
+import { PromptHistoryCreate } from "./promptHistory/PromptHistoryCreate";
+import { PromptHistoryEdit } from "./promptHistory/PromptHistoryEdit";
+import { PromptHistoryShow } from "./promptHistory/PromptHistoryShow";
+import { PromptList } from "./prompt/PromptList";
+import { PromptCreate } from "./prompt/PromptCreate";
+import { PromptEdit } from "./prompt/PromptEdit";
+import { PromptShow } from "./prompt/PromptShow";
 import { jwtAuthProvider } from "./auth-provider/ra-auth-jwt";
 
 const App = (): React.ReactElement => {
@@ -74,6 +86,27 @@ const App = (): React.ReactElement => {
           edit={UserEdit}
           create={UserCreate}
           show={UserShow}
+        />
+        <Resource
+          name="PromptCategory"
+          list={PromptCategoryList}
+          edit={PromptCategoryEdit}
+          create={PromptCategoryCreate}
+          show={PromptCategoryShow}
+        />
+        <Resource
+          name="PromptHistory"
+          list={PromptHistoryList}
+          edit={PromptHistoryEdit}
+          create={PromptHistoryCreate}
+          show={PromptHistoryShow}
+        />
+        <Resource
+          name="Prompt"
+          list={PromptList}
+          edit={PromptEdit}
+          create={PromptCreate}
+          show={PromptShow}
         />
       </Admin>
     </div>
