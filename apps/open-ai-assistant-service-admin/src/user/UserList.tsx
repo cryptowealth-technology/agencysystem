@@ -16,8 +16,10 @@ export const UserList = (props: ListProps): React.ReactElement => {
         <TextField label="Email" source="email" />
         <TextField label="First Name" source="firstName" />
         <TextField label="ID" source="id" />
+        <TextField label="initiator" source="initiator" />
         <TextField label="Last Name" source="lastName" />
         <TextField label="Roles" source="roles" />
+        <TextField label="title" source="title" />
         <DateField source="updatedAt" label="Updated At" />
         <TextField label="Username" source="username" />
       </Datagrid>

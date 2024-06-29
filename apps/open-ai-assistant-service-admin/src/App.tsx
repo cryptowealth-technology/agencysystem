@@ -5,14 +5,14 @@ import { theme } from "./theme/theme";
 import Login from "./Login";
 import "./App.scss";
 import Dashboard from "./pages/Dashboard";
-import { MessageList } from "./message/MessageList";
-import { MessageCreate } from "./message/MessageCreate";
-import { MessageEdit } from "./message/MessageEdit";
-import { MessageShow } from "./message/MessageShow";
 import { ConversationList } from "./conversation/ConversationList";
 import { ConversationCreate } from "./conversation/ConversationCreate";
 import { ConversationEdit } from "./conversation/ConversationEdit";
 import { ConversationShow } from "./conversation/ConversationShow";
+import { MessageList } from "./message/MessageList";
+import { MessageCreate } from "./message/MessageCreate";
+import { MessageEdit } from "./message/MessageEdit";
+import { MessageShow } from "./message/MessageShow";
 import { ReplyList } from "./reply/ReplyList";
 import { ReplyCreate } from "./reply/ReplyCreate";
 import { ReplyEdit } from "./reply/ReplyEdit";
@@ -48,18 +48,18 @@ const App = (): React.ReactElement => {
         loginPage={Login}
       >
         <Resource
-          name="Message"
-          list={MessageList}
-          edit={MessageEdit}
-          create={MessageCreate}
-          show={MessageShow}
-        />
-        <Resource
           name="Conversation"
           list={ConversationList}
           edit={ConversationEdit}
           create={ConversationCreate}
           show={ConversationShow}
+        />
+        <Resource
+          name="Message"
+          list={MessageList}
+          edit={MessageEdit}
+          create={MessageCreate}
+          show={MessageShow}
         />
         <Resource
           name="Reply"

@@ -1,11 +1,39 @@
 import * as React from "react";
-import { Create, SimpleForm, CreateProps } from "react-admin";
+
+import {
+  Create,
+  SimpleForm,
+  CreateProps,
+  TextInput,
+  ReferenceInput,
+  SelectInput,
+  ReferenceArrayInput,
+  SelectArrayInput,
+} from "react-admin";
+
+import { ConversationTitle } from "../conversation/ConversationTitle";
 
 export const MessageCreate = (props: CreateProps): React.ReactElement => {
   return (
     <Create {...props}>
       <SimpleForm>
-        <div />
+        <TextInput label="content" source="content" />
+        <ReferenceInput
+          source="conversation.id"
+          reference="Conversation"
+          label="conversation"
+        >
+          <SelectInput optionText={ConversationTitle} />
+        </ReferenceInput>
+        <ReferenceArrayInput
+          source="conversations"
+          reference="Conversation"
+          parse={(value: any) => value && value.map((v: any) => ({ id: v }))}
+          format={(value: any) => value && value.map((v: any) => v.id)}
+        >
+          <SelectArrayInput optionText={ConversationTitle} />
+        </ReferenceArrayInput>
+        <TextInput label="sender" source="sender" />
       </SimpleForm>
     </Create>
   );

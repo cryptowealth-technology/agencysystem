@@ -22,6 +22,9 @@ import { Message } from "./Message";
 import { MessageFindManyArgs } from "./MessageFindManyArgs";
 import { MessageWhereUniqueInput } from "./MessageWhereUniqueInput";
 import { MessageUpdateInput } from "./MessageUpdateInput";
+import { ConversationFindManyArgs } from "../../conversation/base/ConversationFindManyArgs";
+import { Conversation } from "../../conversation/base/Conversation";
+import { ConversationWhereUniqueInput } from "../../conversation/base/ConversationWhereUniqueInput";
 
 export class MessageControllerBase {
   constructor(protected readonly service: MessageService) {}
@@ -31,10 +34,27 @@ export class MessageControllerBase {
     @common.Body() data: MessageCreateInput
   ): Promise<Message> {
     return await this.service.createMessage({
-      data: data,
+      data: {
+        ...data,
+
+        conversation: data.conversation
+          ? {
+              connect: data.conversation,
+            }
+          : undefined,
+      },
       select: {
+        content: true,
+
+        conversation: {
+          select: {
+            id: true,
+          },
+        },
+
         createdAt: true,
         id: true,
+        sender: true,
         updatedAt: true,
       },
     });
@@ -48,8 +68,17 @@ export class MessageControllerBase {
     return this.service.messages({
       ...args,
       select: {
+        content: true,
+
+        conversation: {
+          select: {
+            id: true,
+          },
+        },
+
         createdAt: true,
         id: true,
+        sender: true,
         updatedAt: true,
       },
     });
@@ -64,8 +93,17 @@ export class MessageControllerBase {
     const result = await this.service.message({
       where: params,
       select: {
+        content: true,
+
+        conversation: {
+          select: {
+            id: true,
+          },
+        },
+
         createdAt: true,
         id: true,
+        sender: true,
         updatedAt: true,
       },
     });
@@ -87,10 +125,27 @@ export class MessageControllerBase {
     try {
       return await this.service.updateMessage({
         where: params,
-        data: data,
+        data: {
+          ...data,
+
+          conversation: data.conversation
+            ? {
+                connect: data.conversation,
+              }
+            : undefined,
+        },
         select: {
+          content: true,
+
+          conversation: {
+            select: {
+              id: true,
+            },
+          },
+
           createdAt: true,
           id: true,
+          sender: true,
           updatedAt: true,
         },
       });
@@ -114,8 +169,17 @@ export class MessageControllerBase {
       return await this.service.deleteMessage({
         where: params,
         select: {
+          content: true,
+
+          conversation: {
+            select: {
+              id: true,
+            },
+          },
+
           createdAt: true,
           id: true,
+          sender: true,
           updatedAt: true,
         },
       });
@@ -127,5 +191,88 @@ export class MessageControllerBase {
       }
       throw error;
     }
+  }
+
+  @common.Get("/:id/conversations")
+  @ApiNestedQuery(ConversationFindManyArgs)
+  async findConversations(
+    @common.Req() request: Request,
+    @common.Param() params: MessageWhereUniqueInput
+  ): Promise<Conversation[]> {
+    const query = plainToClass(ConversationFindManyArgs, request.query);
+    const results = await this.service.findConversations(params.id, {
+      ...query,
+      select: {
+        content: true,
+        createdAt: true,
+        id: true,
+
+        message: {
+          select: {
+            id: true,
+          },
+        },
+
+        responder: true,
+        updatedAt: true,
+      },
+    });
+    if (results === null) {
+      throw new errors.NotFoundException(
+        `No resource was found for ${JSON.stringify(params)}`
+      );
+    }
+    return results;
+  }
+
+  @common.Post("/:id/conversations")
+  async connectConversations(
+    @common.Param() params: MessageWhereUniqueInput,
+    @common.Body() body: ConversationWhereUniqueInput[]
+  ): Promise<void> {
+    const data = {
+      conversations: {
+        connect: body,
+      },
+    };
+    await this.service.updateMessage({
+      where: params,
+      data,
+      select: { id: true },
+    });
+  }
+
+  @common.Patch("/:id/conversations")
+  async updateConversations(
+    @common.Param() params: MessageWhereUniqueInput,
+    @common.Body() body: ConversationWhereUniqueInput[]
+  ): Promise<void> {
+    const data = {
+      conversations: {
+        set: body,
+      },
+    };
+    await this.service.updateMessage({
+      where: params,
+      data,
+      select: { id: true },
+    });
+  }
+
+  @common.Delete("/:id/conversations")
+  async disconnectConversations(
+    @common.Param() params: MessageWhereUniqueInput,
+    @common.Body() body: ConversationWhereUniqueInput[]
+  ): Promise<void> {
+    const data = {
+      conversations: {
+        disconnect: body,
+      },
+    };
+    await this.service.updateMessage({
+      where: params,
+      data,
+      select: { id: true },
+    });
   }
 }

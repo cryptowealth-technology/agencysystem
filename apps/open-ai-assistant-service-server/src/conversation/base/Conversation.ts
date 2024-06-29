@@ -11,11 +11,30 @@ https://docs.amplication.com/how-to/custom-code
   */
 import { ObjectType, Field } from "@nestjs/graphql";
 import { ApiProperty } from "@nestjs/swagger";
-import { IsDate, IsString } from "class-validator";
+import {
+  IsString,
+  MaxLength,
+  IsOptional,
+  IsDate,
+  ValidateNested,
+} from "class-validator";
 import { Type } from "class-transformer";
+import { Message } from "../../message/base/Message";
 
 @ObjectType()
 class Conversation {
+  @ApiProperty({
+    required: false,
+    type: String,
+  })
+  @IsString()
+  @MaxLength(1000)
+  @IsOptional()
+  @Field(() => String, {
+    nullable: true,
+  })
+  content!: string | null;
+
   @ApiProperty({
     required: true,
   })
@@ -31,6 +50,36 @@ class Conversation {
   @IsString()
   @Field(() => String)
   id!: string;
+
+  @ApiProperty({
+    required: false,
+    type: () => Message,
+  })
+  @ValidateNested()
+  @Type(() => Message)
+  @IsOptional()
+  message?: Message | null;
+
+  @ApiProperty({
+    required: false,
+    type: () => [Message],
+  })
+  @ValidateNested()
+  @Type(() => Message)
+  @IsOptional()
+  messages?: Array<Message>;
+
+  @ApiProperty({
+    required: false,
+    type: String,
+  })
+  @IsString()
+  @MaxLength(1000)
+  @IsOptional()
+  @Field(() => String, {
+    nullable: true,
+  })
+  responder!: string | null;
 
   @ApiProperty({
     required: true,

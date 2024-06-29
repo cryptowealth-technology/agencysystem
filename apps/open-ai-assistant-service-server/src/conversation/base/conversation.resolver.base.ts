@@ -17,7 +17,11 @@ import { Conversation } from "./Conversation";
 import { ConversationCountArgs } from "./ConversationCountArgs";
 import { ConversationFindManyArgs } from "./ConversationFindManyArgs";
 import { ConversationFindUniqueArgs } from "./ConversationFindUniqueArgs";
+import { CreateConversationArgs } from "./CreateConversationArgs";
+import { UpdateConversationArgs } from "./UpdateConversationArgs";
 import { DeleteConversationArgs } from "./DeleteConversationArgs";
+import { MessageFindManyArgs } from "../../message/base/MessageFindManyArgs";
+import { Message } from "../../message/base/Message";
 import { ConversationService } from "../conversation.service";
 @graphql.Resolver(() => Conversation)
 export class ConversationResolverBase {
@@ -51,6 +55,51 @@ export class ConversationResolverBase {
   }
 
   @graphql.Mutation(() => Conversation)
+  async createConversation(
+    @graphql.Args() args: CreateConversationArgs
+  ): Promise<Conversation> {
+    return await this.service.createConversation({
+      ...args,
+      data: {
+        ...args.data,
+
+        message: args.data.message
+          ? {
+              connect: args.data.message,
+            }
+          : undefined,
+      },
+    });
+  }
+
+  @graphql.Mutation(() => Conversation)
+  async updateConversation(
+    @graphql.Args() args: UpdateConversationArgs
+  ): Promise<Conversation | null> {
+    try {
+      return await this.service.updateConversation({
+        ...args,
+        data: {
+          ...args.data,
+
+          message: args.data.message
+            ? {
+                connect: args.data.message,
+              }
+            : undefined,
+        },
+      });
+    } catch (error) {
+      if (isRecordNotFoundError(error)) {
+        throw new GraphQLError(
+          `No resource was found for ${JSON.stringify(args.where)}`
+        );
+      }
+      throw error;
+    }
+  }
+
+  @graphql.Mutation(() => Conversation)
   async deleteConversation(
     @graphql.Args() args: DeleteConversationArgs
   ): Promise<Conversation | null> {
@@ -64,5 +113,34 @@ export class ConversationResolverBase {
       }
       throw error;
     }
+  }
+
+  @graphql.ResolveField(() => [Message], { name: "messages" })
+  async findMessages(
+    @graphql.Parent() parent: Conversation,
+    @graphql.Args() args: MessageFindManyArgs
+  ): Promise<Message[]> {
+    const results = await this.service.findMessages(parent.id, args);
+
+    if (!results) {
+      return [];
+    }
+
+    return results;
+  }
+
+  @graphql.ResolveField(() => Message, {
+    nullable: true,
+    name: "message",
+  })
+  async getMessage(
+    @graphql.Parent() parent: Conversation
+  ): Promise<Message | null> {
+    const result = await this.service.getMessage(parent.id);
+
+    if (!result) {
+      return null;
+    }
+    return result;
   }
 }

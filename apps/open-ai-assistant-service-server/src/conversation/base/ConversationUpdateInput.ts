@@ -9,5 +9,67 @@ https://docs.amplication.com/how-to/custom-code
 
 ------------------------------------------------------------------------------
   */
-class ConversationUpdateInput {}
+import { InputType, Field } from "@nestjs/graphql";
+import { ApiProperty } from "@nestjs/swagger";
+import {
+  IsString,
+  MaxLength,
+  IsOptional,
+  ValidateNested,
+} from "class-validator";
+import { MessageWhereUniqueInput } from "../../message/base/MessageWhereUniqueInput";
+import { Type } from "class-transformer";
+import { MessageUpdateManyWithoutConversationsInput } from "./MessageUpdateManyWithoutConversationsInput";
+
+@InputType()
+class ConversationUpdateInput {
+  @ApiProperty({
+    required: false,
+    type: String,
+  })
+  @IsString()
+  @MaxLength(1000)
+  @IsOptional()
+  @Field(() => String, {
+    nullable: true,
+  })
+  content?: string | null;
+
+  @ApiProperty({
+    required: false,
+    type: () => MessageWhereUniqueInput,
+  })
+  @ValidateNested()
+  @Type(() => MessageWhereUniqueInput)
+  @IsOptional()
+  @Field(() => MessageWhereUniqueInput, {
+    nullable: true,
+  })
+  message?: MessageWhereUniqueInput | null;
+
+  @ApiProperty({
+    required: false,
+    type: () => MessageUpdateManyWithoutConversationsInput,
+  })
+  @ValidateNested()
+  @Type(() => MessageUpdateManyWithoutConversationsInput)
+  @IsOptional()
+  @Field(() => MessageUpdateManyWithoutConversationsInput, {
+    nullable: true,
+  })
+  messages?: MessageUpdateManyWithoutConversationsInput;
+
+  @ApiProperty({
+    required: false,
+    type: String,
+  })
+  @IsString()
+  @MaxLength(1000)
+  @IsOptional()
+  @Field(() => String, {
+    nullable: true,
+  })
+  responder?: string | null;
+}
+
 export { ConversationUpdateInput as ConversationUpdateInput };

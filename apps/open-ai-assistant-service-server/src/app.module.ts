@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
-import { MessageModule } from "./message/message.module";
 import { ConversationModule } from "./conversation/conversation.module";
+import { MessageModule } from "./message/message.module";
 import { ReplyModule } from "./reply/reply.module";
 import { UserModule } from "./user/user.module";
 import { HealthModule } from "./health/health.module";
@@ -15,8 +15,8 @@ import { ApolloDriver, ApolloDriverConfig } from "@nestjs/apollo";
 @Module({
   controllers: [],
   imports: [
-    MessageModule,
     ConversationModule,
+    MessageModule,
     ReplyModule,
     UserModule,
     HealthModule,

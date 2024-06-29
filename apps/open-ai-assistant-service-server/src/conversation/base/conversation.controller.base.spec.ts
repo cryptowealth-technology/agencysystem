@@ -18,25 +18,33 @@ import { ConversationService } from "../conversation.service";
 const nonExistingId = "nonExistingId";
 const existingId = "existingId";
 const CREATE_INPUT = {
+  content: "exampleContent",
   createdAt: new Date(),
   id: "exampleId",
+  responder: "exampleResponder",
   updatedAt: new Date(),
 };
 const CREATE_RESULT = {
+  content: "exampleContent",
   createdAt: new Date(),
   id: "exampleId",
+  responder: "exampleResponder",
   updatedAt: new Date(),
 };
 const FIND_MANY_RESULT = [
   {
+    content: "exampleContent",
     createdAt: new Date(),
     id: "exampleId",
+    responder: "exampleResponder",
     updatedAt: new Date(),
   },
 ];
 const FIND_ONE_RESULT = {
+  content: "exampleContent",
   createdAt: new Date(),
   id: "exampleId",
+  responder: "exampleResponder",
   updatedAt: new Date(),
 };
 
